@@ -1,0 +1,49 @@
+{
+  "__version__": "1.0.6",
+  "general": {
+    "designResolution": {
+      "width": 1080,
+      "height": 1920,
+      "fitHeight": true,
+      "fitWidth": false
+    }
+  },
+  "custom_joint_texture_layouts": [],
+  "physics": {
+    "collisionGroups": [
+      {
+        "index": 1,
+        "name": "Fruits"
+      }
+    ],
+    "collisionMatrix": {
+      "0": 3,
+      "1": 3
+    }
+  },
+  "sorting-layer": {
+    "layers": [
+      {
+        "id": 0,
+        "name": "default",
+        "value": 0
+      },
+      {
+        "id": 1,
+        "name": "Back",
+        "value": 1
+      },
+      {
+        "id": 2,
+        "name": "Middle",
+        "value": 2
+      },
+      {
+        "id": 3,
+        "name": "Front",
+        "value": 3
+      }
+    ],
+    "increaseId": 3
+  }
+}
