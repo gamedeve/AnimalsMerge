@@ -6,6 +6,9 @@ const eventTarget = new EventTarget();
 export class LevelUI extends Component {
 
   @property(Node)
+  losePanel: Node | null = null;
+
+  @property(Node)
   pausePanel: Node | null = null;
 
   @property(Node)
@@ -13,6 +16,9 @@ export class LevelUI extends Component {
 
   @property(Label)
   private scoreText: Label | null = null;
+
+  @property(Label)
+  private gameOverScoreText: Label | null = null;
 
 
 
@@ -33,9 +39,14 @@ export class LevelUI extends Component {
   }
 
   ScoreUpdatedHandler(score: number) {
-    console.log("ScoreUpdated", score);
+    // console.log("ScoreUpdated", score);
+
     if(this.scoreText){
       this.scoreText.string = score.toString();
+    }
+
+    if(this.gameOverScoreText){
+      this.gameOverScoreText.string = score.toString();
     }
   }
 
@@ -54,6 +65,11 @@ export class LevelUI extends Component {
   private CloseAllPanels():void{
     this.SetActivePanel(this.pausePanel, false);
     this.SetActivePanel(this.gamePanel, false);
+  }
+
+  private GameOver():void{
+    this.SetActivePanel(this.gamePanel, false);
+    this.SetActivePanel(this.losePanel, false);
   }
   
 
