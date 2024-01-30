@@ -1,34 +1,42 @@
-import { _decorator, Component, Node, director, game } from 'cc';
+import { _decorator, Component, Node, director, game } from "cc";
 const { ccclass, property } = _decorator;
-
-@ccclass('GameData')
+import { Saver } from "db://assets/Core/Scripts/Saver";
+import { GameEventManager } from "./GameEventManager";
+@ccclass("GameData")
 export class GameData extends Component {
   public static Instance: GameData | null = null;
-    onLoad(): void {
-      GameData.Instance = this;
-      director.addPersistRootNode(this.node);
-      window.addEventListener("blur", ()=>{
 
-        this.gamePause(true);
+  public saver: Saver = new Saver();
 
-      });
-      window.addEventListener("focus", ()=>{
+  public inited: boolean = false;
 
-        this.gamePause(false);
+  onLoad(): void {
+    GameData.Instance = this;
+    director.addPersistRootNode(this.node);
+  }
 
-      });
-    }
+  protected start(): void {
+    this.initGame();
+  }
 
-    private gamePause(val:boolean){
-      console.log("Game Pause", val);
-      val ? game.pause() :  game.resume();
-    }
+  private initGame(): void {
+    window.addEventListener("blur", () => {
+      this.gamePause(true);
+    });
+    window.addEventListener("focus", () => {
+      this.gamePause(false);
+    });
 
+    this.saver.load();
 
+    GameEventManager.Instance?.sendOnGameInited();
+    this.inited = true;
+  }
 
-
-    
-
+  private gamePause(val: boolean) {
+    console.log("Game Pause", val);
+    val ? game.pause() : game.resume();
+  }
 
   //   public setTimeScale(scale:number):void {
   //     director.calculateDeltaTime = function(now) {
@@ -38,11 +46,4 @@ export class GameData extends Component {
   //       this._lastUpdate = now;
   //     };
   // }
-   
 }
-
-
-
-
-
-

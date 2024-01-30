@@ -43,7 +43,7 @@ export class MergeItem extends Component {
     this.SetActive(false);
     this.scheduleOnce(() => {
       this.node.destroy();
-      LevelController.Instance?.ItemsMerged(this.Index, this.GetPosInCanvas());
+      LevelController.Instance?.itemsMerged(this.Index, this.GetPosInCanvas());
     }, 0);
   }
 

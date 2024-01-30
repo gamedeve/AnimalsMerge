@@ -31,6 +31,10 @@ export default class L10nLabel extends L10nComponent {
     this.render();
   }
 
+  onEnable(){
+    this.render();
+  }
+
   onLoad() {
     this.label = this.node.getComponent(Label);
   }
