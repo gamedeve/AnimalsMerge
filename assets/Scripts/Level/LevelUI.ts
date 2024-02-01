@@ -18,6 +18,9 @@ export class LevelUI extends Component {
   startPanel: Node | null = null;
 
   @property(Node)
+  tutorPanel: Node | null = null;
+
+  @property(Node)
   losePanel: Node | null = null;
 
   @property(Node)
@@ -33,12 +36,18 @@ export class LevelUI extends Component {
   private gameOverScoreText: Label | null = null;
   @property(Label)
   private pauseScoreText: Label | null = null;
+  
   @property(Label)
   private recordScoreText: Label | null = null;
   @property(ToggleComponent)
   private soundToggle: ToggleComponent | null = null;
   @property(ToggleComponent)
   private musicToggle: ToggleComponent | null = null;
+
+
+  @property(Label)
+  private DeadTimerNumber: Label | null = null;
+
 
   onLoad() {
     console.log("Check data");
@@ -62,20 +71,31 @@ export class LevelUI extends Component {
     }
   }
   onEnable() {
-    GameEventManager.Instance?.node.on(GameEventManager.EventType.ON_GAME_INITED, this.loadSettings, this);
+    GameEventManager.Instance?.node.on(GameEventManager.EventType.GAME_INITED, this.loadSettings, this);
     LevelController.Instance?.node.on(
-      "scoreUpdated",
+      LevelController.EventType.SCORE_UPDATED,
       this.scoreUpdatedHandler,
       this
     );
     LevelController.Instance?.node.on(
-      "recordUpdated",
+      LevelController.EventType.RECORD_UPDATED,
       this.recordUpdatedHandler,
       this
     );
     LevelController.Instance?.node.on(
-      "levelInited",
+      LevelController.EventType.LEVEL_INITED,
       this.levelInitedHandler,
+      this
+    );
+
+    LevelController.Instance?.node.on(
+      LevelController.EventType.SHOW_DEAD_TIMER,
+      this.showDeadTimerPanel,
+      this
+    );
+    LevelController.Instance?.node.on(
+      LevelController.EventType.DEAD_TIMER,
+      this.setDeadTimer,
       this
     );
 
@@ -85,7 +105,7 @@ export class LevelUI extends Component {
 
   onDisable() {
     GameEventManager.Instance?.node.off(
-      GameEventManager.EventType.ON_GAME_INITED,
+      GameEventManager.EventType.GAME_INITED,
       this.loadSettings,
       this
     );
@@ -93,18 +113,28 @@ export class LevelUI extends Component {
     // game.off('scoreUpdated', this.scoreUpdatedHandler, this);
     // eventTarget.off('scoreUpdated', this.scoreUpdatedHandler, this);
     LevelController.Instance?.node.off(
-      "scoreUpdated",
+      LevelController.EventType.SCORE_UPDATED,
       this.scoreUpdatedHandler,
       this
     );
     LevelController.Instance?.node.off(
-      "recordUpdated",
+      LevelController.EventType.RECORD_UPDATED,
       this.recordUpdatedHandler,
       this
     );
     LevelController.Instance?.node.off(
-      "levelInited",
+      LevelController.EventType.LEVEL_INITED,
       this.levelInitedHandler,
+      this
+    );
+    LevelController.Instance?.node.off(
+      LevelController.EventType.SHOW_DEAD_TIMER,
+      this.showDeadTimerPanel,
+      this
+    );
+    LevelController.Instance?.node.off(
+      LevelController.EventType.DEAD_TIMER,
+      this.setDeadTimer,
       this
     );
     this.soundToggle?.node.off("toggle", this.callbackSoundSettings, this);
@@ -156,6 +186,10 @@ export class LevelUI extends Component {
     this.SetActivePanel(this.startPanel, false);
     this.SetActivePanel(this.gamePanel, true);
     LevelController.Instance?.startLevel();
+
+    if(GameData.Instance?.saver.saveData.score == 0){
+      this.showTutor();
+    }
   }
   public restartLevel() {
     LevelController.Instance?.restartLevel();
@@ -173,20 +207,24 @@ export class LevelUI extends Component {
     this.SetActivePanel(this.losePanel, false);
   }
 
+  showTutor(){
+    this.SetActivePanel(this.tutorPanel, true);
+  }
+
+  closeTutor(){
+    this.SetActivePanel(this.tutorPanel, false);
+  }
+
   // Sounds Setting
   callbackSoundSettings(toggle: ToggleComponent) {
-    console.log("callbackSoundSettings");
-    console.log(toggle);
-    console.log(toggle.isChecked);
+   
     GameData.Instance?.saver.setSound(toggle.isChecked);
     GameEventManager.Instance?.sendOnSoundSettingsUpdate(toggle.isChecked);
     GameData.Instance?.saver.save();
     // The callback parameter is the Toggle component, note that events registered this way cannot pass customEventData.
   }
   callbackMusicSettings(toggle: ToggleComponent) {
-    console.log("MusicSettings");
-    console.log(toggle);
-    console.log(toggle.isChecked);
+
     GameData.Instance?.saver.setMusic(toggle.isChecked);
     GameEventManager.Instance?.sendOnMusicSettingsUpdate(toggle.isChecked);
     GameData.Instance?.saver.save();
@@ -198,4 +236,20 @@ export class LevelUI extends Component {
       panel.active = val;
     }
   }
+
+
+  private showDeadTimerPanel(val:boolean){
+    if(this.DeadTimerNumber){
+      this.SetActivePanel(this.DeadTimerNumber.node, val);
+    }   
+  }
+  private setDeadTimer(val:number){
+    if(this.DeadTimerNumber){
+      this.DeadTimerNumber.string = (Math.floor(val)+1).toString();
+    }   
+  }
+
+
+
+
 }

@@ -24,6 +24,8 @@ import {
 } from "cc";
 
 import { MergeItem } from "./MergeItem";
+
+import { DeadLine } from "./DeadLine";
 import { Utils } from "db://assets/Core/Scripts/Utils/Utils";
 import { GameEventManager } from "db://assets/Core/Scripts/GameEventManager";
 import { SoundManager } from "db://assets/Core/Scripts/Audio/SoundManager";
@@ -33,12 +35,26 @@ import { SceneLoader } from "db://assets/Core/Scripts/SceneLoader";
 const { ccclass, property } = _decorator;
 const eventTarget = new EventTarget();
 
+enum LevelEventType {
+  LEVEL_INITED = "LEVEL_INITED",
+  SCORE_UPDATED = "SCORE_UPDATED",
+  RECORD_UPDATED = "RECORD_UPDATED",
+  SHOW_DEAD_TIMER = "SHOW_DEAD_TIMER",
+  DEAD_TIMER = "DEAD_TIMER",
+}
+
 @ccclass("LevelController")
 export class LevelController extends Component {
   public static Instance: LevelController | null = null;
+  public static readonly EventType = LevelEventType;
+
 
   @property(Node)
   touchPanel: Node | null = null;
+
+  @property(Node)
+  deadLineNode: Node | null = null;
+  deadLine: DeadLine | null = null;
 
   @property(Node)
   cursor: Node | null = null;
@@ -49,7 +65,11 @@ export class LevelController extends Component {
   // itemsSpriteList: SpriteFrame[] = [];
 
   @property(Node)
-  private parentNode: Node | null = null;
+  public parentNode: Node | null = null;
+
+
+
+
 
   // @property({ type: Node })
   // private parentShowNext: Node | null = null;
@@ -70,9 +90,14 @@ export class LevelController extends Component {
 
   private currentMergeItem: MergeItem | null = null;
 
+  //таймер смерти
+  private maxDeadTime: number = 5;
+  private deadTime: number = 0;
+  private showDeadTimer: boolean = false;
+
   onLoad() {
     LevelController.Instance = this;
-
+    this.deadLine = this.deadLineNode?.getComponent(DeadLine) as unknown as null;
     // example.on(ExampleEventType.STATE_CHANGED, this.SCH, this);
 
     // eventTarget.on('scoreUpdated', this.ScoreUpdatedHandler, this);
@@ -85,21 +110,21 @@ export class LevelController extends Component {
 
   protected onEnable(): void {
     GameEventManager.Instance?.node.on(
-      GameEventManager.EventType.ON_GAME_INITED,
+      GameEventManager.EventType.GAME_INITED,
       this.initLevel,
       this
     );
     this.touchPanel?.on(Input.EventType.TOUCH_END, this.onTouchEnd, this);
     this.touchPanel?.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
     this.touchPanel?.on(Input.EventType.MOUSE_MOVE, this.onMouseMove, this);
-    director.on(Director.EVENT_AFTER_SCENE_LAUNCH, () => {
-      console.log("EVENT_AFTER_SCENE_LAUNCH");
-    });
+    // director.on(Director.EVENT_AFTER_SCENE_LAUNCH, () => {
+    //   console.log("EVENT_AFTER_SCENE_LAUNCH");
+    // });
   }
 
   protected onDisable(): void {
     GameEventManager.Instance?.node.off(
-      GameEventManager.EventType.ON_GAME_INITED,
+      GameEventManager.EventType.GAME_INITED,
       this.initLevel,
       this
     );
@@ -109,7 +134,7 @@ export class LevelController extends Component {
       this.touchPanel?.off(Input.EventType.MOUSE_MOVE, this.onMouseMove, this);
     }
 
-    director.off(Director.EVENT_AFTER_SCENE_LAUNCH);
+    // director.off(Director.EVENT_AFTER_SCENE_LAUNCH);
   }
 
   protected start(): void {
@@ -119,14 +144,41 @@ export class LevelController extends Component {
     }
   }
 
+  update(deltaTime: number) {
+
+    //Запускаем таймер 
+    if (this.showDeadTimer) {
+      this.deadTime += deltaTime;
+      this.node.emit(LevelController.EventType.DEAD_TIMER, this.deadTime);
+      
+      if(this.deadTime > this.maxDeadTime){
+        
+        if(this.deadLine && this.deadLine?.getItemsUnderLine() > 0){
+          console.log("LOSE", this.deadLine?.getItemsUnderLine());
+        }
+        
+        this.stopDeadTimer();
+        
+      }
+      else{
+        if(this.deadLine && this.deadLine?.getItemsUnderLine() === 0){
+          this.stopDeadTimer();
+        }
+      }
+    }
+  }
+
   private initLevel(): void {
     //Создать первый объект
 
     // console.log(this.itemPos?.getPosition());
     // console.log(this.itemPos?.getWorldPosition());
-    this.node.emit("recordUpdated", GameData.Instance?.saver.saveData.score);
+    this.node.emit(
+      LevelController.EventType.SCORE_UPDATED,
+      GameData.Instance?.saver.saveData.score
+    );
 
-    this.node.emit("levelInited");
+    this.node.emit(LevelController.EventType.LEVEL_INITED);
   }
 
   public startLevel() {
@@ -249,10 +301,10 @@ export class LevelController extends Component {
       if (GameData.Instance?.saver.saveData.score < this.Score) {
         GameData.Instance.saver?.setScore(this.Score);
         GameData.Instance?.saver.save();
-        this.node.emit("recordUpdated", this.Score);
+        this.node.emit(LevelController.EventType.RECORD_UPDATED, this.Score);
       }
     }
-    this.node.emit("scoreUpdated", this.Score);
+    this.node.emit(LevelController.EventType.SCORE_UPDATED, this.Score);
   }
 
   public setPause(val: boolean): void {
@@ -270,5 +322,25 @@ export class LevelController extends Component {
     console.log("RESTARTRESTART");
     director.resume();
     SceneLoader.Instance?.LoadScene("Main");
+  }
+
+
+  //Начать отсчет до смерти
+  public startDeadTimer() {
+    if(!this.showDeadTimer){
+      console.log("START DEAD TIMER")
+      this.deadTime = 0;
+      this.showDeadTimer = true;
+      this.node.emit(LevelController.EventType.SHOW_DEAD_TIMER, this.showDeadTimer);
+    }
+   
+  }
+
+  private stopDeadTimer(){
+    if(this.showDeadTimer){
+      this.showDeadTimer = false; 
+      this.deadTime = 0;
+      this.node.emit(LevelController.EventType.SHOW_DEAD_TIMER, this.showDeadTimer);
+    }
   }
 }

@@ -17,6 +17,7 @@ import {
 const { ccclass, property } = _decorator;
 import { Utils } from "db://assets/Core/Scripts/Utils/Utils";
 import { LevelController } from "./LevelController";
+
 @ccclass("MergeItem")
 export class MergeItem extends Component {
   @property

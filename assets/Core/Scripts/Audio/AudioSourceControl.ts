@@ -19,23 +19,23 @@ export class AudioSourceControl extends Component {
 
   onEnable() {
     GameEventManager.Instance?.node.on(
-      GameEventManager.EventType.ON_GAME_INITED,
+      GameEventManager.EventType.GAME_INITED,
       this.loadSettings,
       this
     );
 
     GameEventManager.Instance?.node.on(
-      GameEventManager.EventType.ON_PAUSE,
+      GameEventManager.EventType.PAUSE,
       this.onPauseCallback,
       this
     );
     GameEventManager.Instance?.node.on(
-      GameEventManager.EventType.ON_MUSIC_SETTINGS_UPDATE,
+      GameEventManager.EventType.MUSIC_SETTINGS_UPDATE,
       this.onMusicSettingsUpdateCallback,
       this
     );
     GameEventManager.Instance?.node.on(
-      GameEventManager.EventType.ON_SOUND_SETTINGS_UPDATE,
+      GameEventManager.EventType.SOUND_SETTINGS_UPDATE,
       this.onSoundSettingsUpdateCallback,
       this
     );
@@ -43,23 +43,23 @@ export class AudioSourceControl extends Component {
 
   onDisable() {
     GameEventManager.Instance?.node.off(
-      GameEventManager.EventType.ON_GAME_INITED,
+      GameEventManager.EventType.GAME_INITED,
       this.loadSettings,
       this
     );
 
     GameEventManager.Instance?.node.off(
-      GameEventManager.EventType.ON_PAUSE,
+      GameEventManager.EventType.PAUSE,
       this.onPauseCallback,
       this
     );
     GameEventManager.Instance?.node.off(
-      GameEventManager.EventType.ON_MUSIC_SETTINGS_UPDATE,
+      GameEventManager.EventType.MUSIC_SETTINGS_UPDATE,
       this.onMusicSettingsUpdateCallback,
       this
     );
     GameEventManager.Instance?.node.off(
-      GameEventManager.EventType.ON_SOUND_SETTINGS_UPDATE,
+      GameEventManager.EventType.SOUND_SETTINGS_UPDATE,
       this.onSoundSettingsUpdateCallback,
       this
     );

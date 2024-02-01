@@ -20,6 +20,24 @@ export class GameData extends Component {
   }
 
   private initGame(): void {
+
+
+            // const url = new URL(window.location.href)
+            // const yandexUrl = ['y', 'a', 'n', 'd', 'e', 'x', '.', 'n', 'e', 't'].join('')
+            // if (url.hostname.includes(yandexUrl) || url.hash.includes('yandex')) {
+            //     platformId = PLATFORM_ID.YANDEX
+            // } else if (url.hostname.includes('crazygames.') || url.hostname.includes('1001juegos.com')) {
+            //     platformId = PLATFORM_ID.CRAZY_GAMES
+            // } else if (url.hostname.includes('gamedistribution.com')) {
+            //     platformId = PLATFORM_ID.GAME_DISTRIBUTION
+            // } else if (url.searchParams.has('api_id') && url.searchParams.has('viewer_id') && url.searchParams.has('auth_key')) {
+            //     platformId = PLATFORM_ID.VK
+            // } else if (url.searchParams.has('app_id') && url.searchParams.has('player_id') && url.searchParams.has('game_sid') && url.searchParams.has('auth_key')) {
+            //     platformId = PLATFORM_ID.ABSOLUTE_GAMES
+            // }
+
+
+
     window.addEventListener("blur", () => {
       this.gamePause(true);
     });
