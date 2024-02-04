@@ -10,7 +10,7 @@ export class AudioSourceControl extends Component {
   private soundEnabled: boolean = true;
   private isPause: boolean = false;
 
-  onLoad() {
+  protected start(): void {
     this.audioSource = this.node.getComponent(AudioSource);
     if (GameData.Instance?.inited) {
       this.loadSettings();
@@ -29,6 +29,7 @@ export class AudioSourceControl extends Component {
       this.onPauseCallback,
       this
     );
+   
     GameEventManager.Instance?.node.on(
       GameEventManager.EventType.MUSIC_SETTINGS_UPDATE,
       this.onMusicSettingsUpdateCallback,
@@ -54,6 +55,11 @@ export class AudioSourceControl extends Component {
       this
     );
     GameEventManager.Instance?.node.off(
+      GameEventManager.EventType.GAME_END,
+      this.onGameEndCallback,
+      this
+    );
+    GameEventManager.Instance?.node.off(
       GameEventManager.EventType.MUSIC_SETTINGS_UPDATE,
       this.onMusicSettingsUpdateCallback,
       this
@@ -69,6 +75,8 @@ export class AudioSourceControl extends Component {
     if (GameData.Instance?.saver.saveData) {
       this.musicEnabled = GameData.Instance?.saver.saveData.music;
       this.soundEnabled = GameData.Instance?.saver.saveData.sound;
+      console.log("this.musicEnabled", this.musicEnabled)
+      this.musicEnabled && !this.isPause ? this.audioSource?.play() : this.audioSource?.pause();
     }
   }
   private onPauseCallback(val: boolean): void {
@@ -77,6 +85,10 @@ export class AudioSourceControl extends Component {
     !val && this.musicEnabled
       ? this.audioSource?.play()
       : this.audioSource?.pause();
+  }
+
+  private onGameEndCallback(): void {
+    this.audioSource?.pause();
   }
 
   private onMusicSettingsUpdateCallback(val: boolean) {

@@ -21,7 +21,7 @@ export class SoundManager extends Component {
   private musicEnabled: boolean = true;
   private soundEnabled: boolean = true;
 
-  onLoad() {
+  protected start(): void  {
     SoundManager.Instance = this;
     director.addPersistRootNode(this.node);
     this.audioSource = this.node.getComponent(AudioSource);

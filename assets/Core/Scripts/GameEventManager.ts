@@ -1,13 +1,15 @@
+declare const bridge: any;
 import { _decorator, Component, Node, director, game } from 'cc';
 
 const { ccclass, property } = _decorator;
 
 enum GameEventType
 {
-	SOUND_SETTINGS_UPDATE = 'SoundSettingsUpdate',
-	MUSIC_SETTINGS_UPDATE = 'MusicSettingsUpdate',
-	PAUSE = 'Pause',
-	GAME_INITED = 'GameInited',
+	SOUND_SETTINGS_UPDATE = 'SOUND_SETTINGS_UPDATE',
+	MUSIC_SETTINGS_UPDATE = 'MUSIC_SETTINGS_UPDATE',
+	PAUSE = 'PAUSE',
+	GAME_END = 'GAME_END',
+	GAME_INITED = 'GAME_INITED',
 }
 
 @ccclass('GameEventManager')
@@ -19,6 +21,8 @@ export class GameEventManager extends Component {
   onLoad(): void {
     GameEventManager.Instance = this;
     director.addPersistRootNode(this.node);
+   
+
   }
   
  
@@ -26,9 +30,15 @@ export class GameEventManager extends Component {
   {
     this.node.emit(GameEventManager.EventType.PAUSE, val);
   }
-
+  public sendOnGameEnd() : void
+  {
+    this.node.emit(GameEventManager.EventType.GAME_END);
+  }
   public sendOnGameInited() : void
   {
+    // bridge.game.on(bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, (state:any) => { 
+    //   console.log('Visibility state:', state);
+    // })
     this.node.emit(GameEventManager.EventType.GAME_INITED);
   }
 

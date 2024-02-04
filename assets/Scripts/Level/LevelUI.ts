@@ -15,6 +15,8 @@ const eventTarget = new EventTarget();
 @ccclass("LevelUI")
 export class LevelUI extends Component {
   @property(Node)
+  loadPanel: Node | null = null;
+  @property(Node)
   startPanel: Node | null = null;
 
   @property(Node)
@@ -49,13 +51,6 @@ export class LevelUI extends Component {
   private DeadTimerNumber: Label | null = null;
 
 
-  onLoad() {
-    console.log("Check data");
-    console.log(GameData.Instance?.inited);
-    if (GameData.Instance?.inited) {
-      this.loadSettings();
-    }
-  }
 
   loadSettings() {
     if (GameData.Instance?.saver.saveData) {
@@ -98,6 +93,11 @@ export class LevelUI extends Component {
       this.setDeadTimer,
       this
     );
+    LevelController.Instance?.node.on(
+      LevelController.EventType.LEVEL_END,
+      this.gameEnd,
+      this
+    );
 
     this.soundToggle?.node.on("toggle", this.callbackSoundSettings, this);
     this.musicToggle?.node.on("toggle", this.callbackMusicSettings, this);
@@ -137,16 +137,31 @@ export class LevelUI extends Component {
       this.setDeadTimer,
       this
     );
+
+    LevelController.Instance?.node.off(
+      LevelController.EventType.LEVEL_END,
+      this.gameEnd,
+      this
+    );
     this.soundToggle?.node.off("toggle", this.callbackSoundSettings, this);
     this.musicToggle?.node.off("toggle", this.callbackMusicSettings, this);
   }
 
-  start() {
+  protected start(): void {
+    console.log("Check data");
+    console.log(GameData.Instance?.inited);
     this.closeAllPanels();
     this.scoreUpdatedHandler(0);
+    this.SetActivePanel(this.loadPanel, true);
+    
+    if (GameData.Instance?.inited) {
+      this.loadSettings();
+    }
+    
   }
 
   levelInitedHandler() {
+    this.SetActivePanel(this.loadPanel, false);
     this.SetActivePanel(this.startPanel, true);
   }
 
@@ -202,9 +217,9 @@ export class LevelUI extends Component {
     this.SetActivePanel(this.startPanel, false);
   }
 
-  private gameOver(): void {
+  private gameEnd(): void {
     this.SetActivePanel(this.gamePanel, false);
-    this.SetActivePanel(this.losePanel, false);
+    this.SetActivePanel(this.losePanel, true);
   }
 
   showTutor(){

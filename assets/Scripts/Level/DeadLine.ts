@@ -43,7 +43,7 @@ export class DeadLine extends Component {
 
   public getItemsUnderLine(): number {
     let count:number = 0;
-    console.log("resultArr ALLLLLLL", LevelController.Instance?.parentNode?.children?.length);
+    // console.log("resultArr ALLLLLLL", LevelController.Instance?.parentNode?.children?.length);
     const resultArr = LevelController.Instance?.parentNode?.children.filter(
       (node) => {
 
@@ -53,7 +53,7 @@ export class DeadLine extends Component {
         
       }
     );
-    console.log("resultArr", resultArr?.length);
+    // console.log("resultArr", resultArr?.length);
 
     count = resultArr?.length ? resultArr?.length : 0;
     return count;

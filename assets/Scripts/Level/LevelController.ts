@@ -2,6 +2,7 @@ import {
   _decorator,
   Component,
   Node,
+  NodePool,
   Prefab,
   Director,
   director,
@@ -26,6 +27,7 @@ import {
 import { MergeItem } from "./MergeItem";
 
 import { DeadLine } from "./DeadLine";
+import { LevelState } from "./LevelState";
 import { Utils } from "db://assets/Core/Scripts/Utils/Utils";
 import { GameEventManager } from "db://assets/Core/Scripts/GameEventManager";
 import { SoundManager } from "db://assets/Core/Scripts/Audio/SoundManager";
@@ -41,12 +43,15 @@ enum LevelEventType {
   RECORD_UPDATED = "RECORD_UPDATED",
   SHOW_DEAD_TIMER = "SHOW_DEAD_TIMER",
   DEAD_TIMER = "DEAD_TIMER",
+  LEVEL_END = "LEVEL_END",
 }
+
 
 @ccclass("LevelController")
 export class LevelController extends Component {
   public static Instance: LevelController | null = null;
   public static readonly EventType = LevelEventType;
+  public state: LevelState = LevelState.INIT;
 
 
   @property(Node)
@@ -61,6 +66,8 @@ export class LevelController extends Component {
 
   @property([Prefab])
   itemsList: Prefab[] = [];
+
+  poolList: NodePool[] = [];
   // @property([SpriteFrame])
   // itemsSpriteList: SpriteFrame[] = [];
 
@@ -94,9 +101,13 @@ export class LevelController extends Component {
   private maxDeadTime: number = 5;
   private deadTime: number = 0;
   private showDeadTimer: boolean = false;
-
   onLoad() {
     LevelController.Instance = this;
+
+    this.itemsList.forEach((item, index, arr) => {
+      this.poolList[index] = new NodePool(item.name);
+    });
+
     this.deadLine = this.deadLineNode?.getComponent(DeadLine) as unknown as null;
     // example.on(ExampleEventType.STATE_CHANGED, this.SCH, this);
 
@@ -154,7 +165,7 @@ export class LevelController extends Component {
       if(this.deadTime > this.maxDeadTime){
         
         if(this.deadLine && this.deadLine?.getItemsUnderLine() > 0){
-          console.log("LOSE", this.deadLine?.getItemsUnderLine());
+          this.endGame();
         }
         
         this.stopDeadTimer();
@@ -171,14 +182,20 @@ export class LevelController extends Component {
   private initLevel(): void {
     //Создать первый объект
 
-    // console.log(this.itemPos?.getPosition());
+    console.log("initLevel initLevel");
+    console.log( GameData.Instance?.saver.saveData.score);
     // console.log(this.itemPos?.getWorldPosition());
-    this.node.emit(
-      LevelController.EventType.SCORE_UPDATED,
-      GameData.Instance?.saver.saveData.score
-    );
-
+    // this.node.emit(
+    //   LevelController.EventType.SCORE_UPDATED,
+    //   GameData.Instance?.saver.saveData.score
+    // );
+    this.node.emit(LevelController.EventType.RECORD_UPDATED, GameData.Instance?.saver.saveData.score);
     this.node.emit(LevelController.EventType.LEVEL_INITED);
+    this.state = LevelState.GAME;
+    GameData.Instance?.analytics.gameReady();
+   
+    GameData.Instance?.ads.showInterstitial();
+    GameData.Instance?.analytics.startLevel();
   }
 
   public startLevel() {
@@ -279,17 +296,29 @@ export class LevelController extends Component {
     if (index >= this.itemsList.length) {
       return null;
     }
-
-    let node: Node = instantiate(
-      this.getMergeItemByIndex(index)
-    ) as unknown as Node;
-
-    node.parent = this.parentNode;
-    //node.parent = scene;;
-    node.setPosition(pos);
+    let node: Node | null = null;
+    if (this.poolList[index].size() > 0) {
+       node = this.poolList[index].get();
+       node?.getComponent(MergeItem)?.reset();
+    }
+    else{
+    node = instantiate(
+          this.getMergeItemByIndex(index)
+        ) as unknown as Node;
+    }
+    
+     
+    if(node){
+      node.parent = this.parentNode;
+      node.setPosition(pos);
+    }
 
     return node;
     // console.log("TEST",Utils.randomInteger(0, 2));
+  }
+
+  public addItemToPool(item:Node, index:number){
+    this.poolList[index].put(item);
   }
 
   private addScoreByIndex(index: number) {
@@ -301,6 +330,9 @@ export class LevelController extends Component {
       if (GameData.Instance?.saver.saveData.score < this.Score) {
         GameData.Instance.saver?.setScore(this.Score);
         GameData.Instance?.saver.save();
+        GameData.Instance?.leaderboard.setScore(this.Score);
+   
+
         this.node.emit(LevelController.EventType.RECORD_UPDATED, this.Score);
       }
     }
@@ -310,8 +342,10 @@ export class LevelController extends Component {
   public setPause(val: boolean): void {
     this.IsPause = val;
     if (val) {
+      this.state = LevelState.PAUSE;
       director.pause();
     } else {
+      this.state = LevelState.GAME;
       director.resume();
     }
 
@@ -327,6 +361,11 @@ export class LevelController extends Component {
 
   //Начать отсчет до смерти
   public startDeadTimer() {
+
+    if(this.state !== LevelState.GAME){
+      return;
+    }
+
     if(!this.showDeadTimer){
       console.log("START DEAD TIMER")
       this.deadTime = 0;
@@ -342,5 +381,13 @@ export class LevelController extends Component {
       this.deadTime = 0;
       this.node.emit(LevelController.EventType.SHOW_DEAD_TIMER, this.showDeadTimer);
     }
+  }
+
+  private endGame(){
+    this.state = LevelState.END;
+    console.log("LOSE", this.deadLine?.getItemsUnderLine());
+    this.node.emit(LevelController.EventType.LEVEL_END);
+    GameEventManager.Instance?.sendOnGameEnd();
+    GameData.Instance?.analytics.endLevel();
   }
 }

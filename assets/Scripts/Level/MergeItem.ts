@@ -13,6 +13,7 @@ import {
   Sprite,
   SpriteFrame,
   UITransform,
+  Quat
 } from "cc";
 const { ccclass, property } = _decorator;
 import { Utils } from "db://assets/Core/Scripts/Utils/Utils";
@@ -22,6 +23,7 @@ import { LevelController } from "./LevelController";
 export class MergeItem extends Component {
   @property
   public Index: number = 0;
+
   public Active: boolean = true;
   public itemFly: boolean = false;
 
@@ -38,12 +40,29 @@ export class MergeItem extends Component {
     this.collider.on(Contact2DType.BEGIN_CONTACT, this.onBeginContact, this);
   }
 
+  public reset(): void {
+    this.Active = true;
+    this.itemFly = false;
+    
+    this.node.rotation = new Quat(0,0,0,0);
+    if(this.rb){
+      this.rb.angularVelocity = 0;
+      this.rb.linearVelocity = v2(Vec2.ZERO);
+      this.rb.enabled = true;
+    }
+
+    if (this.collider) {
+      this.collider.enabled = true;
+    }
+  }
+
   public SetNewIndex(): void {
     // console.log("otherMergeItem", this.Index)
     // this.Active = false;
     this.SetActive(false);
     this.scheduleOnce(() => {
-      this.node.destroy();
+      // this.node.destroy();
+      LevelController.Instance?.addItemToPool(this.node, this.Index);
       LevelController.Instance?.itemsMerged(this.Index, this.GetPosInCanvas());
     }, 0);
   }
@@ -107,7 +126,8 @@ export class MergeItem extends Component {
         otherMergeItem?.SetNewIndex();
 
         this.SetActive(false);
-        this.node.destroy();
+        // this.node.destroy();
+        LevelController.Instance?.addItemToPool(this.node, this.Index);
       }, 0);
     }
   }
