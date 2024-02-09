@@ -6,7 +6,7 @@ export class Saver {
   public saveData = {
     sound: true,
     music: true,
-    score: 12,
+    score: 0,
   };
 
   public setScore(val: number) {

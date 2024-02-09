@@ -60,11 +60,14 @@ export class MergeItem extends Component {
     // console.log("otherMergeItem", this.Index)
     // this.Active = false;
     this.SetActive(false);
-    this.scheduleOnce(() => {
-      // this.node.destroy();
-      LevelController.Instance?.addItemToPool(this.node, this.Index);
-      LevelController.Instance?.itemsMerged(this.Index, this.GetPosInCanvas());
-    }, 0);
+
+    LevelController.Instance?.addItemToPool(this.node, this.Index);
+    LevelController.Instance?.itemsMerged(this.Index, this.GetPosInCanvas());
+    // this.scheduleOnce(() => {
+    //   // this.node.destroy();
+    //   LevelController.Instance?.addItemToPool(this.node, this.Index);
+    //   LevelController.Instance?.itemsMerged(this.Index, this.GetPosInCanvas());
+    // }, 0);
   }
 
   public SetPos(pos: Vec3) {
@@ -114,6 +117,7 @@ export class MergeItem extends Component {
     }
     
     if (
+      this.Active && 
       this.MergeItem &&
       otherMergeItem &&
       otherMergeItem.Index === this.MergeItem.Index &&
@@ -121,6 +125,10 @@ export class MergeItem extends Component {
     ) {
       this.Active = false;
       // console.log(otherMergeItem?.Index);
+      // otherMergeItem?.SetNewIndex();
+      // this.SetActive(false);
+      // LevelController.Instance?.addItemToPool(this.node, this.Index);
+
 
       this.scheduleOnce(() => {
         otherMergeItem?.SetNewIndex();

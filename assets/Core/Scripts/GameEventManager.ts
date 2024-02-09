@@ -19,8 +19,14 @@ export class GameEventManager extends Component {
   public static readonly EventType = GameEventType;
 
   onLoad(): void {
-    GameEventManager.Instance = this;
-    director.addPersistRootNode(this.node);
+    if(GameEventManager.Instance === null){
+      GameEventManager.Instance = this;
+    }
+    else{
+      this.node.destroy();
+      return;
+    }
+    // director.addPersistRootNode(this.node);
    
 
   }

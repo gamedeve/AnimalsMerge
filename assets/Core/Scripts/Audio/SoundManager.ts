@@ -22,8 +22,14 @@ export class SoundManager extends Component {
   private soundEnabled: boolean = true;
 
   protected start(): void  {
-    SoundManager.Instance = this;
-    director.addPersistRootNode(this.node);
+    if(SoundManager.Instance === null){
+      SoundManager.Instance = this;
+    }
+    else{
+      this.node.destroy();
+      return;
+    }
+    // director.addPersistRootNode(this.node);
     this.audioSource = this.node.getComponent(AudioSource);
 
     if (GameData.Instance?.inited) {

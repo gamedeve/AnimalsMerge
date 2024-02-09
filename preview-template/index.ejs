@@ -41,6 +41,11 @@
             </div>
         </div>
         <%- include(cocosTemplate, {}) %>
+		<script>
+    const canvas = document.querySelector("#GameCanvas");
+    canvas.addEventListener("touchstart", () => { window.focus() });
+        canvas.addEventListener("pointerdown", () => { window.focus() });
+  </script>
 		  <script src="./instant-games-bridge.js"></script>
   
     </body>

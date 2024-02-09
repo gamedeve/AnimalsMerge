@@ -1,6 +1,6 @@
 declare const bridge: any;
 import * as i18n from "db://i18n/LanguageData";
-import { _decorator, Component, Node, director, game } from "cc";
+import { _decorator, Component, Node, director, game, Game } from "cc";
 const { ccclass, property } = _decorator;
 import { Saver } from "db://assets/Core/Scripts/Saver";
 import { Ads } from "db://assets/Core/Scripts/Ads";
@@ -19,24 +19,40 @@ export class GameData extends Component {
   public inited: boolean = false;
   public adsShow: boolean = false;
   onLoad(): void {
-    GameData.Instance = this;
+
+    
+    if(GameData.Instance === null){
+      GameData.Instance = this;
+    }
+    else{
+      this.node.destroy();
+      return;
+    }
+    // console.log("GameData onload")
+    // GameData.Instance = this;
     director.addPersistRootNode(this.node);
+
+
+    if(this.inited){
+      return;
+    }
+    bridge
+    ?.initialize()
+    .then(() => {
+      console.log(
+        "Инициализация прошла успешно, можно использовать SDK 22222222222",  this.inited,GameData.Instance === this
+      );
+      i18n.init(bridge.platform.language);
+      this.initGame();
+    })
+    .catch((error: any) => {
+      console.log(error, "// Ошибка, что-то пошло не так 2222222222");
+    });
   }
 
-  protected start(): void {
-    bridge
-      ?.initialize()
-      .then(() => {
-        console.log(
-          "Инициализация прошла успешно, можно использовать SDK 22222222222"
-        );
-        i18n.init(bridge.platform.language);
-        this.initGame();
-      })
-      .catch((error: any) => {
-        console.log(error, "// Ошибка, что-то пошло не так 2222222222");
-      });
-  }
+  // protected start(): void {
+   
+  // }
 
   private initGame(): void {
     // const url = new URL(window.location.href)
@@ -52,31 +68,37 @@ export class GameData extends Component {
     // } else if (url.searchParams.has('app_id') && url.searchParams.has('player_id') && url.searchParams.has('game_sid') && url.searchParams.has('auth_key')) {
     //     platformId = PLATFORM_ID.ABSOLUTE_GAMES
     // }
-
+    // game.on(Game.EVENT_SHOW, function () {
+    //   // do something
+    // });
     window.addEventListener("blur", () => {
       this.gamePause(true);
+      console.log("window blur");
     });
     window.addEventListener("focus", () => {
       this.gamePause(false);
+      console.log("window focus");
     });
 
-    // bridge.game.on(bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, (state: any) => {
-    //   if (state === "hidden") {
-    //     console.log("Отключаем звук VISIBILITY_STATE_CHANGED");
-    //     this.gamePause(true);
-    //   } else if (state === "visible") {
-    //     console.log("Включаем звук VISIBILITY_STATE_CHANGED");
-    //     this.gamePause(false);
-    //   }
-    //   console.log("Visibility state:", state);
-    // });
+    bridge.game.on(bridge.EVENT_NAME.VISIBILITY_STATE_CHANGED, (state: any) => {
+      if (state === "hidden") {
+        // console.log("VISIBILITY_STATE_CHANGED hidden");
+        // this.gamePause(true);
+      } else if (state === "visible") {
+        // console.log("VISIBILITY_STATE_CHANGED visible");
+        this.gamePause(false);
+        // bridge.window.focus();
+      }
+      console.log("VISIBILITY_STATE_CHANGED:", state);
+    });
 
     // bridge.advertisement.interstitialState
     //// Отслеживать изменение состояния можно подписавшись на событие
+    // globalThis
     bridge.advertisement.on(
       bridge.EVENT_NAME.INTERSTITIAL_STATE_CHANGED,
       (state: any) => {
-        if (state === "loading") {
+        if (state === "opened") {
           console.log("Отключаем звук из-за рекламы");
           this.adsShow = true;
           this.gamePause(true);
@@ -95,7 +117,7 @@ export class GameData extends Component {
     bridge.advertisement.on(
       bridge.EVENT_NAME.REWARDED_STATE_CHANGED,
       (state: any) => {
-        if (state === "loading") {
+        if (state === "opened") {
           console.log("Отключаем звук из-за рекламы");
           this.adsShow = true;
           this.gamePause(true);
@@ -128,12 +150,15 @@ export class GameData extends Component {
   }
 
   private gamePause(val: boolean) {
-    ;
+    
     if(val){
       game.pause();
+      // director.pause();
       console.log("Game Pause", true);
     } else if(!val && !this.adsShow){
+      
       game.resume();
+      // director.resume();
       console.log("Game Pause", false);
     }
     // val ? game.pause() : game.resume();
