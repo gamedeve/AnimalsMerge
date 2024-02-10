@@ -58,6 +58,13 @@ export class LevelController extends Component {
   touchPanel: Node | null = null;
 
   @property(Node)
+  leftWall: Node | null = null;
+  private leftMaxPos: number = 0;
+  @property(Node)
+  rightWall: Node | null = null;
+  private rightMaxPos: number = 0;
+
+  @property(Node)
   deadLineNode: Node | null = null;
   deadLine: DeadLine | null = null;
 
@@ -128,6 +135,17 @@ export class LevelController extends Component {
     this.touchPanel?.on(Input.EventType.TOUCH_END, this.onTouchEnd, this);
     this.touchPanel?.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
     this.touchPanel?.on(Input.EventType.MOUSE_MOVE, this.onMouseMove, this);
+
+    if(this.leftWall){
+      this.leftMaxPos = this.leftWall.position.x + 60;
+      console.log("leftWall",this.leftMaxPos);
+    }
+
+    if(this.rightWall){
+      this.rightMaxPos = this.rightWall.position.x - 60;
+      console.log("rightWall",this.rightMaxPos);
+    }
+   
     // director.on(Director.EVENT_AFTER_SCENE_LAUNCH, () => {
     //   console.log("EVENT_AFTER_SCENE_LAUNCH");
     // });
@@ -182,8 +200,8 @@ export class LevelController extends Component {
   private initLevel(): void {
     //Создать первый объект
 
-    console.log("initLevel initLevel");
-    console.log( GameData.Instance?.saver.saveData.score);
+    // console.log("initLevel initLevel");
+    // console.log( GameData.Instance?.saver.saveData.score);
     // console.log(this.itemPos?.getWorldPosition());
     // this.node.emit(
     //   LevelController.EventType.SCORE_UPDATED,
@@ -220,6 +238,8 @@ export class LevelController extends Component {
     this.itemFly = true;
 
     let x = event.getUILocation().x - view.getVisibleSize().width / 2;
+    x = this.checkCursorPos(x);
+    // console.log("Cursor pos", x);
     this.MoveCursor(v3(x, this.cursor?.position.y || 0, 0));
 
     //Запускаем предыдущий Итем
@@ -241,12 +261,25 @@ export class LevelController extends Component {
 
   onMouseMove(event: EventMouse) {
     let x = event.getUILocationX() - view.getVisibleSize().width / 2;
+    x = this.checkCursorPos(x);
     this.MoveCursor(v3(x, this.cursor?.position.y || 0, 0));
   }
 
   onTouchMove(event: EventTouch) {
     let x = event.getUILocation().x - view.getVisibleSize().width / 2;
+    x = this.checkCursorPos(x);
     this.MoveCursor(v3(x, this.cursor?.position.y || 0, 0));
+  }
+
+  private checkCursorPos(x: number): number{
+    if(x < this.leftMaxPos){
+      x = this.leftMaxPos;
+    }
+    else if(x > this.rightMaxPos){
+      x = this.rightMaxPos;
+    }
+
+    return x;
   }
 
   private MoveCursor(pos: Vec3) {
